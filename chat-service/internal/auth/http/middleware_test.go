@@ -1,15 +1,14 @@
 package http_test
 
 import (
+	authhttp "github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/http"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	authhttp "github.com/Lucas-Onofre/financial-chat/chat-service/auth/http"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt"
 )
 
 func Test_AuthMiddleware(t *testing.T) {

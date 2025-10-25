@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"errors"
-
-	jwtport "github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt/port"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt/utils"
-	customerrors "github.com/Lucas-Onofre/financial-chat/chat-service/shared/errors"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dao"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dto"
-	userrepo "github.com/Lucas-Onofre/financial-chat/chat-service/user/repository/port"
+	jwtport "github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/port"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/utils"
+	customerrors "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/errors"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dto"
+	userrepo "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/repository/port"
 )
 
 type Service struct {

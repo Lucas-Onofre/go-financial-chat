@@ -1,6 +1,8 @@
 package port
 
-import "github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt/model"
+import (
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/model"
+)
 
 type TokenService interface {
 	GenerateToken(userID string) (string, error)

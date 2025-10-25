@@ -2,10 +2,9 @@ package repository
 
 import (
 	"context"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
 
 	"gorm.io/gorm"
-
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dao"
 )
 
 type DB interface {

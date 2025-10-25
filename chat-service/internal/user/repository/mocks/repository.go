@@ -2,10 +2,9 @@ package mocks
 
 import (
 	"context"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
 
 	"github.com/stretchr/testify/mock"
-
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dao"
 )
 
 type MockRepository struct {

@@ -1,12 +1,11 @@
 package dao
 
 import (
-	"github.com/Lucas-Onofre/financial-chat/chat-service/shared/entity"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/entity"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dto"
 	"time"
 
 	"github.com/google/uuid"
-
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dto"
 )
 
 type User struct {

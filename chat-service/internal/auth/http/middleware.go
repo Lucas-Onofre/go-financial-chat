@@ -3,10 +3,9 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
 	"net/http"
 	"strings"
-
-	"github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt"
 )
 
 type contextKey string

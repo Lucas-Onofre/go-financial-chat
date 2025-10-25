@@ -2,17 +2,16 @@ package service
 
 import (
 	"context"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/utils"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dto"
+	userrepomock "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/repository/mocks"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt/utils"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dao"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dto"
-	userrepomock "github.com/Lucas-Onofre/financial-chat/chat-service/user/repository/mocks"
 )
 
 func TestService_Login(t *testing.T) {

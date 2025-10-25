@@ -1,11 +1,10 @@
 package jwt
 
 import (
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/model"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-
-	"github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt/model"
 )
 
 type JWTService struct {

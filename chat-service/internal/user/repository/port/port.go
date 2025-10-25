@@ -2,8 +2,7 @@ package port
 
 import (
 	"context"
-
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dao"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
 )
 
 type RepositoryPort interface {

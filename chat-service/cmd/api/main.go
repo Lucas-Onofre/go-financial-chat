@@ -4,15 +4,22 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/Lucas-Onofre/financial-chat/chat-service/broker"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dao"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/broker"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/handler"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/repository"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/service"
 )
 
 func main() {
+	mux := http.NewServeMux()
+
 	// TODO configure database
 	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
@@ -32,10 +39,14 @@ func main() {
 	}
 	defer rb.Close()
 
-	// TODO uncomment
-	//jwtService := jwt.NewJWTService(os.Getenv("SECRET_KEY"), 24*time.Hour)
+	jwtService := jwt.NewJWTService(os.Getenv("SECRET_KEY"), 24*time.Hour)
+	userRepo := repository.NewRepository(db)
+	userService := service.New(userRepo, jwtService)
+	userHandler := handler.New(*userService)
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/register", userHandler.Register)
+	mux.HandleFunc("/login", userHandler.Login)
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
 
