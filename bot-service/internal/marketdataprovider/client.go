@@ -1,4 +1,4 @@
-package stooqprovider
+package marketdataprovider
 
 import "github.com/go-resty/resty/v2"
 
@@ -10,7 +10,7 @@ type Client struct {
 	client *resty.Client
 }
 
-func New() *Client {
+func New() MarketDataProviderPort {
 	return &Client{
 		client: resty.New(),
 	}

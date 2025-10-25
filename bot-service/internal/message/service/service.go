@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/broker"
+	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/message/dto"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/shared"
-	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/stooqprovider"
 )
 
 var (
@@ -20,27 +20,27 @@ var (
 )
 
 type Service struct {
-	stooqClient    *stooqprovider.Client
+	mktdataClient  marketdataprovider.MarketDataProviderPort
 	brokerProducer broker.Producer
 }
 
-func New(stooqClient *stooqprovider.Client, brokerProducer broker.Producer) *Service {
+func New(mktdataClient marketdataprovider.MarketDataProviderPort, brokerProducer broker.Producer) *Service {
 	return &Service{
-		stooqClient:    stooqClient,
+		mktdataClient:  mktdataClient,
 		brokerProducer: brokerProducer,
 	}
 }
 
 func (s *Service) Process(_ context.Context, msg dto.CommandMessage) error {
-	rawCsv, err := s.stooqClient.GetMarketData(msg.Command.GetValue())
+	rawCsv, err := s.mktdataClient.GetMarketData(msg.Command.GetValue())
 	if err != nil {
-		sendFailureMessage(s.brokerProducer, msg.UserID, msg.RoomID, ReasonExternalServiceFailure)
+		_ = sendFailureMessage(s.brokerProducer, msg.UserID, msg.RoomID, ReasonExternalServiceFailure)
 		return err
 	}
 
 	formattedMessage, err := getMessageFromCSV(rawCsv)
 	if err != nil {
-		sendFailureMessage(s.brokerProducer, msg.UserID, msg.RoomID, ReasonInternalError)
+		_ = sendFailureMessage(s.brokerProducer, msg.UserID, msg.RoomID, ReasonInternalError)
 		return err
 	}
 
@@ -73,14 +73,14 @@ func getMessageFromCSV(csvData string) (string, error) {
 	symbol := records[1][0]
 	closePrice := records[1][6]
 
-	if closePrice == "N/D" {
+	if closePrice == "N/D" || closePrice == "" {
 		return "", errors.New("quote not available")
 	}
 
-	return symbol + " quote is $" + closePrice + "per share", nil
+	return symbol + " quote is $" + closePrice + " per share", nil
 }
 
-func sendFailureMessage(broker broker.Producer, userID, roomID, reason string) {
+func sendFailureMessage(broker broker.Producer, userID, roomID, reason string) error {
 	response := dto.ResponseMessage{
 		UserID:  userID,
 		RoomID:  roomID,
@@ -90,10 +90,13 @@ func sendFailureMessage(broker broker.Producer, userID, roomID, reason string) {
 	respBytes, err := json.Marshal(response)
 	if err != nil {
 		log.Printf("failed to marshal failure response: %v", err)
-		return
+		return err
 	}
 
 	if err := broker.Publish(shared.BrokerChatResponsesQueueName, string(respBytes)); err != nil {
 		log.Printf("failed to publish failure response: %v", err)
+		return err
 	}
+
+	return nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider"
 	"log"
 	"net/http"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/message/handler"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/message/service"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/shared"
-	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/stooqprovider"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 	}
 	defer rb.Close()
 
-	stooqClient := stooqprovider.New()
+	stooqClient := marketdataprovider.New()
 	service := service.New(stooqClient, rb)
 	handler := handler.New(service)
 
