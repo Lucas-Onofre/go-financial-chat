@@ -63,7 +63,9 @@ func main() {
 	mux.HandleFunc("/register", handleMethod(http.MethodPost, userHandler.Register))
 	mux.HandleFunc("/login", handleMethod(http.MethodPost, userHandler.Login))
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
 	})
 
 	log.Println("Starting server on port 8081")

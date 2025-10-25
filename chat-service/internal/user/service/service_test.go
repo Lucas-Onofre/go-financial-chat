@@ -2,16 +2,17 @@ package service
 
 import (
 	"context"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/utils"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dto"
-	userrepomock "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/repository/mocks"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/utils"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dto"
+	userrepomock "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/repository/mocks"
 )
 
 func TestService_Login(t *testing.T) {
@@ -112,6 +113,8 @@ func TestService_Register(t *testing.T) {
 				},
 			},
 			setup: func(repo *userrepomock.MockRepository) {
+				repo.On("FindByUsername", mock.Anything, "newuser").Return(nil, nil)
+
 				repo.On("Create", mock.Anything, mock.MatchedBy(func(u dao.User) bool {
 					return u.Username == "newuser" && len(u.Password) > 0
 				})).Return(nil)
@@ -128,6 +131,8 @@ func TestService_Register(t *testing.T) {
 				},
 			},
 			setup: func(repo *userrepomock.MockRepository) {
+				repo.On("FindByUsername", mock.Anything, "newuser").Return(nil, nil)
+				
 				repo.On("Create", mock.Anything, mock.MatchedBy(func(u dao.User) bool {
 					return u.Username == "newuser" && len(u.Password) > 0
 				})).Return(assert.AnError)

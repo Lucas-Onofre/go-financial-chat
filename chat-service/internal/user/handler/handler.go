@@ -2,10 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	customerrors "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/errors"
-	dto2 "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dto"
-	usersrv "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/service"
 	"net/http"
+
+	customerrors "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/errors"
+	userdto "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dto"
+	usersrv "github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/service"
 )
 
 var (
@@ -29,15 +30,16 @@ func New(service usersrv.Service) *Handler {
 func (a *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var input dto2.RegisterDTO
+	var input userdto.RegisterDTO
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrInvalidRequestBody)
 		return
 	}
 
 	if err := a.service.Register(ctx, input); err != nil {
-		json.NewEncoder(w).Encode(err)
+		customerrors.HandleError(w, err)
 		return
 	}
 
@@ -47,18 +49,19 @@ func (a *Handler) Register(w http.ResponseWriter, r *http.Request) {
 func (a *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var input dto2.LoginDTO
+	var input userdto.LoginDTO
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrInvalidRequestBody)
+		return
 	}
 
 	token, err := a.service.Login(ctx, input)
 	if err != nil {
-		json.NewEncoder(w).Encode(err)
+		customerrors.HandleError(w, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(dto2.TokenDTO{TokenString: token})
+	json.NewEncoder(w).Encode(userdto.TokenDTO{TokenString: token})
 }

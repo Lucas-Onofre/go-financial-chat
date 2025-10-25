@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+
 	jwtport "github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/port"
 	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt/utils"
 	customerrors "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/errors"
@@ -28,8 +29,8 @@ func (s *Service) Register(ctx context.Context, userDTO dto.RegisterDTO) error {
 	user = user.FromRegisterDTO(userDTO)
 
 	exists, err := s.repo.FindByUsername(ctx, user.Username)
-	if err != nil || exists == nil {
-		return customerrors.Wrap(customerrors.ErrUnauthorized, errors.New("user already exists"))
+	if err == nil && exists != nil {
+		return customerrors.Wrap(customerrors.ErrUnprocessable, errors.New("user already exists"))
 	}
 
 	hashedPassword, hashErr := utils.HashPassword(user.Password)
@@ -51,7 +52,7 @@ func (s *Service) Login(ctx context.Context, loginDTO dto.LoginDTO) (string, err
 
 	saved, err := s.repo.FindByUsername(ctx, user.Username)
 	if err != nil || saved == nil {
-		return "", customerrors.Wrap(customerrors.ErrUnauthorized, errors.New("error retrieving data"))
+		return "", customerrors.Wrap(customerrors.ErrUnauthorized, errors.New("invalid credentials"))
 	}
 
 	if !utils.CheckPasswordHash(loginDTO.Password, saved.Password) {

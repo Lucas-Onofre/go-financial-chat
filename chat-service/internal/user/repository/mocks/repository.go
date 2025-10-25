@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+
 	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
 
 	"github.com/stretchr/testify/mock"
@@ -18,5 +19,8 @@ func (m *MockRepository) Create(ctx context.Context, user dao.User) error {
 
 func (m *MockRepository) FindByUsername(ctx context.Context, username string) (*dao.User, error) {
 	args := m.Called(ctx, username)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*dao.User), args.Error(1)
 }

@@ -1,6 +1,9 @@
 package errors
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+)
 
 var (
 	ErrBadRequest    = NewAppError("BAD_REQUEST", "Invalid request data", http.StatusBadRequest, nil)
@@ -23,10 +26,26 @@ func Wrap(base *AppError, err error) *AppError {
 	if base == nil {
 		return ErrInternal
 	}
+
 	return &AppError{
 		Code:    base.Code,
-		Message: base.Message,
+		Message: err.Error(),
 		Status:  base.Status,
 		Err:     err,
 	}
+}
+
+func HandleError(w http.ResponseWriter, err error) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if appErr, ok := err.(*AppError); ok {
+		w.WriteHeader(appErr.Status)
+		json.NewEncoder(w).Encode(appErr)
+		return
+	}
+
+	w.WriteHeader(http.StatusInternalServerError)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": "Internal server error",
+	})
 }
