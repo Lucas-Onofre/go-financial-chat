@@ -3,21 +3,21 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	jwtport "github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt/port"
 	"github.com/Lucas-Onofre/financial-chat/chat-service/auth/jwt/utils"
 	customerrors "github.com/Lucas-Onofre/financial-chat/chat-service/shared/errors"
 	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dao"
 	"github.com/Lucas-Onofre/financial-chat/chat-service/user/dto"
+	userrepo "github.com/Lucas-Onofre/financial-chat/chat-service/user/repository/port"
 )
 
 type Service struct {
-	repo       any
+	repo       userrepo.RepositoryPort
 	jwtService jwtport.TokenService
 }
 
-func New(repo any, jwtService jwtport.TokenService) *Service {
+func New(repo userrepo.RepositoryPort, jwtService jwtport.TokenService) *Service {
 	return &Service{
 		repo:       repo,
 		jwtService: jwtService,
@@ -33,10 +33,7 @@ func (s *Service) Register(ctx context.Context, userDTO dto.RegisterDTO) error {
 		return hashErr
 	}
 
-	fmt.Println("Hashed password:", hashedPassword)
-	return nil
-	// TODO uncomment it after creating the repository
-	//return s.repo.Create(ctx, user.Build(hashedPassword))
+	return s.repo.Create(ctx, user.Build(hashedPassword))
 }
 
 func (s *Service) Login(ctx context.Context, loginDTO dto.LoginDTO) (string, error) {
