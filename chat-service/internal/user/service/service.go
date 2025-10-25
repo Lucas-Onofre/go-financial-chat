@@ -27,12 +27,22 @@ func (s *Service) Register(ctx context.Context, userDTO dto.RegisterDTO) error {
 	var user dao.User
 	user = user.FromRegisterDTO(userDTO)
 
+	exists, err := s.repo.FindByUsername(ctx, user.Username)
+	if err != nil || exists == nil {
+		return customerrors.Wrap(customerrors.ErrUnauthorized, errors.New("user already exists"))
+	}
+
 	hashedPassword, hashErr := utils.HashPassword(user.Password)
 	if hashErr != nil {
 		return hashErr
 	}
 
-	return s.repo.Create(ctx, user.Build(hashedPassword))
+	createErr := s.repo.Create(ctx, user.Build(hashedPassword))
+	if createErr != nil {
+		return customerrors.Wrap(customerrors.ErrInternal, errors.New("an error ocurred creating user"))
+	}
+
+	return nil
 }
 
 func (s *Service) Login(ctx context.Context, loginDTO dto.LoginDTO) (string, error) {

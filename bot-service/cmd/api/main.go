@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/broker"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider"
@@ -20,9 +21,21 @@ func main() {
 		os.Getenv("RABBITMQ_PASSWORD"),
 		os.Getenv("RABBITMQ_HOST"),
 		os.Getenv("RABBITMQ_PORT"))
-	rb, err := broker.NewRabbitMQBroker(rabbitmqURL)
+
+	// Retry logic for RabbitMQ connection
+	var rb *broker.RabbitMQBroker
+	var err error
+	maxRetries := 10
+	for i := 0; i < maxRetries; i++ {
+		rb, err = broker.NewRabbitMQBroker(rabbitmqURL)
+		if err == nil {
+			break
+		}
+		log.Printf("Failed to connect to RabbitMQ (attempt %d/%d): %v", i+1, maxRetries, err)
+		time.Sleep(5 * time.Second)
+	}
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to connect to RabbitMQ after all retries:", err)
 	}
 	defer rb.Close()
 

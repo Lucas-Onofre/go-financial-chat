@@ -37,9 +37,21 @@ func main() {
 		os.Getenv("RABBITMQ_PASSWORD"),
 		os.Getenv("RABBITMQ_HOST"),
 		os.Getenv("RABBITMQ_PORT"))
-	rb, err := broker.NewRabbitMQBroker(rabbitmqURL)
-	if err != nil {
-		log.Fatal(err)
+
+	// Retry logic for RabbitMQ connection
+	var rb *broker.RabbitMQBroker
+	var retryErr error
+	maxRetries := 10
+	for i := 0; i < maxRetries; i++ {
+		rb, retryErr = broker.NewRabbitMQBroker(rabbitmqURL)
+		if retryErr == nil {
+			break
+		}
+		log.Printf("Failed to connect to RabbitMQ (attempt %d/%d): %v", i+1, maxRetries, err)
+		time.Sleep(5 * time.Second)
+	}
+	if retryErr != nil {
+		log.Fatal("Failed to connect to RabbitMQ after all retries:", err)
 	}
 	defer rb.Close()
 
@@ -48,13 +60,24 @@ func main() {
 	userService := service.New(userRepo, jwtService)
 	userHandler := handler.New(*userService)
 
-	mux.HandleFunc("/register", userHandler.Register)
-	mux.HandleFunc("/login", userHandler.Login)
+	mux.HandleFunc("/register", handleMethod(http.MethodPost, userHandler.Register))
+	mux.HandleFunc("/login", handleMethod(http.MethodPost, userHandler.Login))
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
 
-	if err := http.ListenAndServe(":8081", nil); err != nil {
+	log.Println("Starting server on port 8081")
+	if err := http.ListenAndServe(":8081", mux); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func handleMethod(method string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		handlerFunc(w, r)
 	}
 }
