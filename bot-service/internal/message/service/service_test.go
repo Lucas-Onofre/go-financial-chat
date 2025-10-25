@@ -31,7 +31,7 @@ func TestService_Process(t *testing.T) {
 	tests := []struct {
 		name  string
 		args  args
-		setup func(stooqClient *mktdatamock.MockMarketDataProvider, brokerProducer *brokermock.MockBroker)
+		setup func(marketDataClient *mktdatamock.MockMarketDataProvider, brokerProducer *brokermock.MockBroker)
 		want  want
 	}{
 		{
