@@ -20,11 +20,11 @@ var (
 )
 
 type Service struct {
-	stooqClient    stooqprovider.Client
+	stooqClient    *stooqprovider.Client
 	brokerProducer broker.Producer
 }
 
-func New(stooqClient stooqprovider.Client, brokerProducer broker.Producer) *Service {
+func New(stooqClient *stooqprovider.Client, brokerProducer broker.Producer) *Service {
 	return &Service{
 		stooqClient:    stooqClient,
 		brokerProducer: brokerProducer,

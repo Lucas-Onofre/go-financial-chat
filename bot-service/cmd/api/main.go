@@ -21,8 +21,8 @@ func main() {
 	defer rb.Close()
 
 	stooqClient := stooqprovider.New()
-	service := service.New(*stooqClient, rb)
-	handler := handler.New(*service)
+	service := service.New(stooqClient, rb)
+	handler := handler.New(service)
 
 	if err := rb.Subscribe(shared.BrokerChatCommandsQueueName, func(message string) error {
 		if err := handler.Handle(context.Background(), message); err != nil {
