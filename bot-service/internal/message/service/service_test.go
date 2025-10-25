@@ -5,12 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
 	brokermock "github.com/Lucas-Onofre/financial-chat/bot-service/internal/broker/mocks"
 	mktdatamock "github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider/mocks"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/message/dto"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/shared"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 var (

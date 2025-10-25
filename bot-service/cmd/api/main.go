@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider"
 	"log"
 	"net/http"
 
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/broker"
+	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/message/handler"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/message/service"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/shared"
