@@ -1,0 +1,55 @@
+services:
+  chat-service:
+    build:
+        context: ./chat-service
+        dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./:/app
+    networks:
+      - db-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+  bot-service:
+    build:
+      context: ./bot-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    image: postgres:17
+    environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+        - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - db-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pg-data:
+
+networks:
+  db-network:
+    driver: bridge

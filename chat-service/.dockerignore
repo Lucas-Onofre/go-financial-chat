@@ -1,0 +1,5 @@
+# Volumes
+pg-data/
+
+# Others
+.git
