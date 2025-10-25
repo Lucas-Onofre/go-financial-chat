@@ -10,13 +10,13 @@ type Client struct {
 	client *resty.Client
 }
 
-func New() any {
+func New() *Client {
 	return &Client{
 		client: resty.New(),
 	}
 }
 
-func (c *Client) GetData(stockCommand string) (string, error) {
+func (c *Client) GetMarketData(stockCommand string) (string, error) {
 	resp, err := c.client.R().
 		SetQueryParams(map[string]string{
 			"s": stockCommand,
