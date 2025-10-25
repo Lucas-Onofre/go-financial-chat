@@ -27,6 +27,18 @@ Thumbs.db
 *.log
 logs/
 
+# Dependencies (if any)
+node_modules/
+vendor/
+
+# Build artifacts
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
 # Test files
 *_test.go
 test/
@@ -39,7 +51,3 @@ coverage/
 # Temporary files
 tmp/
 temp/
-
-# Go specific
-vendor/
-go.sum

@@ -1,5 +1,45 @@
-# Volumes
-pg-data/
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
 
-# Others
+# Git
 .git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test files
+*_test.go
+test/
+tests/
+
+# Coverage files
+*.out
+coverage/
+
+# Temporary files
+tmp/
+temp/
+
+# Go specific
+vendor/
+go.sum

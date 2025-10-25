@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/broker"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider"
@@ -13,8 +15,12 @@ import (
 )
 
 func main() {
-	// TODO configure rabbitMQ via env variables
-	rb, err := broker.NewRabbitMQBroker("amqp://guest:guest@localhost:5672/")
+	rabbitmqURL := fmt.Sprintf("amqp://%s:%s@%s:%s/",
+		os.Getenv("RABBITMQ_USER"),
+		os.Getenv("RABBITMQ_PASSWORD"),
+		os.Getenv("RABBITMQ_HOST"),
+		os.Getenv("RABBITMQ_PORT"))
+	rb, err := broker.NewRabbitMQBroker(rabbitmqURL)
 	if err != nil {
 		log.Fatal(err)
 	}

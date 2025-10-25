@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -20,7 +21,6 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
-	// TODO configure database
 	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
@@ -32,8 +32,12 @@ func main() {
 		log.Fatal("failed to migrate database:", err)
 	}
 
-	// TODO configure rabbitMQ via env variables
-	rb, err := broker.NewRabbitMQBroker("amqp://guest:guest@localhost:5672/")
+	rabbitmqURL := fmt.Sprintf("amqp://%s:%s@%s:%s/",
+		os.Getenv("RABBITMQ_USER"),
+		os.Getenv("RABBITMQ_PASSWORD"),
+		os.Getenv("RABBITMQ_HOST"),
+		os.Getenv("RABBITMQ_PORT"))
+	rb, err := broker.NewRabbitMQBroker(rabbitmqURL)
 	if err != nil {
 		log.Fatal(err)
 	}
