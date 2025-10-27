@@ -47,7 +47,18 @@ func (c *CommandMessage) Validate() error {
 }
 
 type ResponseMessage struct {
-	UserID  string `json:"from_user_id"`
-	RoomID  string `json:"room_id"`
-	Message string `json:"message"`
+	Type      string `json:"type"`
+	RoomID    string `json:"room_id"`
+	Content   string `json:"content"`
+	Timestamp int64  `json:"timestamp"`
+}
+
+type MessageType string
+
+const (
+	MessageTypeBot MessageType = "bot"
+)
+
+func (mt MessageType) ToString() string {
+	return string(mt)
 }

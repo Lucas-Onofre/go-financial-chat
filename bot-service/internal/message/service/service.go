@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/broker"
 	"github.com/Lucas-Onofre/financial-chat/bot-service/internal/marketdataprovider"
@@ -46,9 +47,10 @@ func (s *Service) Process(_ context.Context, msg dto.CommandMessage) error {
 	}
 
 	response := dto.ResponseMessage{
-		UserID:  msg.UserID,
-		RoomID:  msg.RoomID,
-		Message: formattedMessage,
+		Type:      dto.MessageTypeBot.ToString(),
+		RoomID:    msg.RoomID,
+		Content:   formattedMessage,
+		Timestamp: time.Now().Unix(),
 	}
 
 	respBytes, err := json.Marshal(response)
@@ -95,9 +97,10 @@ func getMessageFromCSV(csvData string) (string, error) {
 
 func sendFailureMessage(broker broker.Producer, userID, roomID, reason string) error {
 	response := dto.ResponseMessage{
-		UserID:  userID,
-		RoomID:  roomID,
-		Message: "Failed to retrieve stock data: " + reason,
+		Type:      dto.MessageTypeBot.ToString(),
+		RoomID:    roomID,
+		Content:   reason,
+		Timestamp: time.Now().Unix(),
 	}
 
 	respBytes, err := json.Marshal(response)

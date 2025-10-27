@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	shared "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/properties"
 	"log"
 	"net/http"
 	"os"
@@ -73,6 +74,18 @@ func main() {
 
 	// Websocket
 	mux.HandleFunc("/ws", websocket.WsHandler(hub, jwtService))
+
+	// Bot responses handling
+	if err := rb.Subscribe(shared.BrokerChatResponsesQueueName, func(message string) error {
+		if err := hub.HandleBotMessage(message); err != nil {
+			log.Printf("failed to handle message: %v", err)
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		log.Fatal(err)
+	}
 
 	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

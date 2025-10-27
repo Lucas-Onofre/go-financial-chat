@@ -108,3 +108,13 @@ func (h *Hub) broadcastToRoom(roomID string, message Message) {
 		}
 	}
 }
+
+func (h *Hub) HandleBotMessage(message string) error {
+	var msg Message
+	if err := json.Unmarshal([]byte(message), &msg); err != nil {
+		return err
+	}
+
+	h.broadcastToRoom(msg.RoomID, msg)
+	return nil
+}
