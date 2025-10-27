@@ -171,7 +171,7 @@ func TestService_sendFailureMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := sendFailureMessage(tt.args.broker, tt.args.userID, tt.args.roomID, tt.args.reason)
+			err := sendFailureMessage(tt.args.broker, tt.args.roomID, tt.args.reason)
 			assert.Equal(t, tt.wantErr, err)
 		})
 	}

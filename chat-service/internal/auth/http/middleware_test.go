@@ -1,19 +1,20 @@
 package http_test
 
 import (
-	authhttp "github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/http"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	authhttp "github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/http"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/auth/jwt"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_AuthMiddleware(t *testing.T) {
 	jwtService := jwt.NewJWTService("secret", time.Minute*5)
-	validToken, err := jwtService.GenerateToken("user123")
+	validToken, err := jwtService.GenerateToken("user123", "test")
 	if err != nil {
 		t.Fatalf("failed to generate valid token: %v", err)
 	}
