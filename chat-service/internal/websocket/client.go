@@ -2,12 +2,13 @@ package websocket
 
 import (
 	"encoding/json"
-	shared "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/properties"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
+
+	shared "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/properties"
 )
 
 type Client struct {
@@ -28,9 +29,25 @@ type Message struct {
 	Timestamp int64  `json:"timestamp"`
 }
 
-func NewBotMessage(roomID string, content string) Message {
+var AvailableCommands = []string{
+	"/stock",
+}
+
+func (c *Message) IsCommandValid() bool {
+	valid := false
+	for _, cmd := range AvailableCommands {
+		if strings.HasPrefix(c.Content, cmd+"=") || c.Content == cmd {
+			valid = true
+			break
+		}
+	}
+
+	return valid
+}
+
+func NewBotMessage(roomID string, messageType MessageType, content string) Message {
 	return Message{
-		Type:      MessageTypeBot.ToString(),
+		Type:      messageType.ToString(),
 		UserID:    "",
 		Username:  "Financial Bot",
 		RoomID:    roomID,
@@ -47,6 +64,8 @@ const (
 	MessageTypeUserLeft   MessageType = "user_left"
 	MessageTypeCommand    MessageType = "command"
 	MessageTypeBot        MessageType = "bot"
+	MessageTypeError      MessageType = "error"
+	MessageTypeInvalid    MessageType = "invalid"
 )
 
 func (mt MessageType) ToString() string {
@@ -85,11 +104,17 @@ func (c *Client) ReadPump() {
 		message.RoomID = c.RoomID
 
 		if strings.ToLower(message.Type) == strings.ToLower(MessageTypeCommand.ToString()) {
+			if !message.IsCommandValid() {
+				log.Printf("error publishing command message to broker: %v", err)
+				botMessage := NewBotMessage(c.RoomID, MessageTypeInvalid, "Invalid command. Verify and try again.")
+				c.Hub.broadcastToRoom(c.RoomID, botMessage)
+			}
+
 			updatedBytes, _ := json.Marshal(message)
 			if err := c.Hub.Broker.Publish(shared.BrokerChatCommandsQueueName, string(updatedBytes)); err != nil {
 				log.Printf("error publishing command message to broker: %v", err)
-				botMessage := NewBotMessage(c.RoomID, "Failed to process command. Please try again later.")
-				c.Hub.Broadcast <- botMessage
+				botMessage := NewBotMessage(c.RoomID, MessageTypeError, "Failed to process command. Please try again later.")
+				c.Hub.broadcastToRoom(c.RoomID, botMessage)
 			}
 			continue
 		}

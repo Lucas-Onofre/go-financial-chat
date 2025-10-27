@@ -36,13 +36,13 @@ func New(mktdataClient marketdataprovider.MarketDataProviderPort, brokerProducer
 func (s *Service) Process(_ context.Context, msg dto.CommandMessage) error {
 	rawCsv, err := s.mktdataClient.GetMarketData(msg.Command.GetValue())
 	if err != nil {
-		_ = sendFailureMessage(s.brokerProducer, msg.UserID, msg.RoomID, ReasonExternalServiceFailure)
+		_ = sendFailureMessage(s.brokerProducer, msg.RoomID, ReasonExternalServiceFailure)
 		return err
 	}
 
 	formattedMessage, err := getMessageFromCSV(rawCsv)
 	if err != nil {
-		_ = sendFailureMessage(s.brokerProducer, msg.UserID, msg.RoomID, ReasonInternalError)
+		_ = sendFailureMessage(s.brokerProducer, msg.RoomID, ReasonInternalError)
 		return err
 	}
 
@@ -95,9 +95,9 @@ func getMessageFromCSV(csvData string) (string, error) {
 	return symbol + " quote is $" + closePrice + " per share", nil
 }
 
-func sendFailureMessage(broker broker.Producer, userID, roomID, reason string) error {
+func sendFailureMessage(broker broker.Producer, roomID, reason string) error {
 	response := dto.ResponseMessage{
-		Type:      dto.MessageTypeBot.ToString(),
+		Type:      dto.MessageTypeError.ToString(),
 		RoomID:    roomID,
 		Content:   reason,
 		Timestamp: time.Now().Unix(),

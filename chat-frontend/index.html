@@ -14,7 +14,8 @@
     .chat-box { border: 1px solid #ccc; border-radius: 5px; height: 250px; overflow-y: auto; padding: 10px; background: #fafafa; margin-bottom: 5px; }
     .message { margin-bottom: 5px; }
     .system { color: #888; font-style: italic; }
-    .bot { color: #2c7; font-weight: bold; }
+    .bot { color: #2c7; font-weight: bold; background: #eef; border-radius: 5px; padding: 2px 5px; }
+    .alert { color: #900; background-color: #fdd; border-radius: 5px; padding: 2px 5px; font-weight: bold; }
     .room-tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 5px; }
     .room-tab { padding: 5px 10px; border-radius: 5px; background: #ddd; cursor: pointer; display: flex; align-items: center; gap: 5px; }
     .room-tab.active { background: #4f46e5; color: white; }
@@ -94,10 +95,22 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+
       if(!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      token = data.token;
-      showChatSection();
+
+      let data = {};
+      try {
+        data = await res.json(); // tenta converter
+      } catch {
+        data = {};
+      }
+
+      if (data.token) {
+        token = data.token;
+        showChatSection();
+      } else {
+        alert('Registration successful! Please log in.');
+      }
     } catch(err) {
       alert('Registration error: ' + err.message);
     }
@@ -142,6 +155,9 @@
       if(msg.type === 'bot') {
         div.className = 'message bot';
         div.innerHTML = `🤖 ${msg.content}`;
+      } else if(msg.type === 'invalid' || msg.type === 'error') {
+        div.className = 'message alert';
+        div.innerHTML = `⚠ ${msg.content}`;
       } else if(msg.username) {
         div.className = 'message';
         div.innerHTML = `<strong>${msg.username}:</strong> ${msg.content}`;
@@ -158,7 +174,7 @@
 
   // ---------- Join / Close Room ----------
   function joinRoom(roomID) {
-    if (rooms[roomID]) return setActiveRoom(roomID); // already connected
+    if (rooms[roomID]) return setActiveRoom(roomID);
 
     const ws = new WebSocket(`${WS_BASE}?token=${encodeURIComponent(token)}&room=${encodeURIComponent(roomID)}`);
     rooms[roomID] = { ws, messages: [] };
@@ -201,7 +217,7 @@
     }
   }
 
-  // ---------- Send Message with command support ----------
+  // ---------- Send Message ----------
   document.getElementById('joinRoomBtn').onclick = () => {
     const roomID = document.getElementById('new-room').value.trim() || 'general';
     joinRoom(roomID);
@@ -213,10 +229,8 @@
     if(!message || !activeRoom) return;
 
     const ws = rooms[activeRoom].ws;
-
     const msgPayload = { content: message };
 
-    // If message starts with "/", send as command but keep the "/"
     if(message.startsWith('/')) {
       msgPayload.type = 'command';
     } else {
@@ -226,7 +240,6 @@
     if(ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(msgPayload));
       msgInput.value = '';
-      // ⚠ Do not push locally, backend broadcast will handle it
     }
   };
 

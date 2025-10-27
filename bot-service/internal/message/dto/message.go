@@ -56,7 +56,8 @@ type ResponseMessage struct {
 type MessageType string
 
 const (
-	MessageTypeBot MessageType = "bot"
+	MessageTypeBot   MessageType = "bot"
+	MessageTypeError MessageType = "error"
 )
 
 func (mt MessageType) ToString() string {
