@@ -28,8 +28,7 @@ RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/`
 Make sure you have Docker and Python 3 installed.
 
 ``
-docker compose up --build -d && \
-(cd ./chat-frontend && python3 -m http.server 3000)``
+docker compose up --build -d && (cd ./chat-frontend && python3 -m http.server 3000)``
 
 Open the frontend in your browser:
 `http://localhost:3000`
