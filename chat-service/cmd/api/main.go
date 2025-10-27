@@ -68,7 +68,7 @@ func main() {
 	mux.HandleFunc("/login", handleMethod(http.MethodPost, userHandler.Login))
 
 	// Websocket Hub
-	hub := websocket.NewHub()
+	hub := websocket.NewHub(rb)
 	go hub.Run()
 
 	// Websocket

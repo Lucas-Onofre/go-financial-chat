@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -56,6 +57,7 @@ func (s *Service) Process(_ context.Context, msg dto.CommandMessage) error {
 		return err
 	}
 
+	fmt.Printf("Publishing response: %s\n", string(respBytes))
 	return s.brokerProducer.Publish(shared.BrokerChatResponsesQueueName, string(respBytes))
 }
 

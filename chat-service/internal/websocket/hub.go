@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/broker"
 	"log"
 	"time"
 )
@@ -16,14 +17,16 @@ type Hub struct {
 	Broadcast  chan Message
 	Register   chan *Client
 	Unregister chan *Client
+	Broker     broker.Producer
 }
 
-func NewHub() *Hub {
+func NewHub(rb broker.Producer) *Hub {
 	return &Hub{
 		Rooms:      make(map[string]map[*Client]bool),
 		Broadcast:  make(chan Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
+		Broker:     rb,
 	}
 }
 
@@ -82,7 +85,6 @@ func (h *Hub) Run() {
 
 		case message := <-h.Broadcast:
 			log.Printf("Broadcast to room %s, clients: %d", message.RoomID, len(h.Rooms[message.RoomID]))
-			message.Type = MessageTypeChat.ToString()
 			h.broadcastToRoom(message.RoomID, message)
 		}
 	}

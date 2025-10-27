@@ -2,7 +2,9 @@ package websocket
 
 import (
 	"encoding/json"
+	shared "github.com/Lucas-Onofre/financial-chat/chat-service/internal/shared/properties"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -26,12 +28,25 @@ type Message struct {
 	Timestamp int64  `json:"timestamp"`
 }
 
+func NewBotMessage(roomID string, content string) Message {
+	return Message{
+		Type:      MessageTypeBot.ToString(),
+		UserID:    "",
+		Username:  "Financial Bot",
+		RoomID:    roomID,
+		Content:   content,
+		Timestamp: time.Now().Unix(),
+	}
+}
+
 type MessageType string
 
 const (
 	MessageTypeChat       MessageType = "default"
 	MessageTypeUserJoined MessageType = "user_joined"
 	MessageTypeUserLeft   MessageType = "user_left"
+	MessageTypeCommand    MessageType = "command"
+	MessageTypeBot        MessageType = "bot"
 )
 
 func (mt MessageType) ToString() string {
@@ -68,6 +83,15 @@ func (c *Client) ReadPump() {
 		message.UserID = c.UserID
 		message.Username = c.Username
 		message.RoomID = c.RoomID
+
+		if strings.ToLower(message.Type) == strings.ToLower(MessageTypeCommand.ToString()) {
+			if err := c.Hub.Broker.Publish(shared.BrokerChatCommandsQueueName, string(messageBytes)); err != nil {
+				log.Printf("error publishing command message to broker: %v", err)
+				botMessage := NewBotMessage(c.RoomID, "Failed to process command. Please try again later.")
+				c.Hub.Broadcast <- botMessage
+			}
+			continue
+		}
 
 		c.Hub.Broadcast <- message
 	}

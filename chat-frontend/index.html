@@ -14,6 +14,7 @@
     .chat-box { border: 1px solid #ccc; border-radius: 5px; height: 250px; overflow-y: auto; padding: 10px; background: #fafafa; margin-bottom: 5px; }
     .message { margin-bottom: 5px; }
     .system { color: #888; font-style: italic; }
+    .bot { color: #2c7; font-weight: bold; }
     .room-tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 5px; }
     .room-tab { padding: 5px 10px; border-radius: 5px; background: #ddd; cursor: pointer; display: flex; align-items: center; gap: 5px; }
     .room-tab.active { background: #4f46e5; color: white; }
@@ -134,12 +135,24 @@
   function renderMessages() {
     chatContainer.innerHTML = '';
     if(!activeRoom) return;
+
     rooms[activeRoom].messages.forEach(msg => {
       const div = document.createElement('div');
-      div.className = 'message';
-      div.innerHTML = msg.username ? `<strong>${msg.username}:</strong> ${msg.content}` : `<span class='system'>${msg.content}</span>`;
+
+      if(msg.type === 'bot') {
+        div.className = 'message bot';
+        div.innerHTML = `🤖 ${msg.content}`;
+      } else if(msg.username) {
+        div.className = 'message';
+        div.innerHTML = `<strong>${msg.username}:</strong> ${msg.content}`;
+      } else {
+        div.className = 'message system';
+        div.innerHTML = `<span class='system'>${msg.content}</span>`;
+      }
+
       chatContainer.appendChild(div);
     });
+
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
@@ -188,7 +201,7 @@
     }
   }
 
-  // ---------- Send Message ----------
+  // ---------- Send Message with command support ----------
   document.getElementById('joinRoomBtn').onclick = () => {
     const roomID = document.getElementById('new-room').value.trim() || 'general';
     joinRoom(roomID);
@@ -196,13 +209,25 @@
 
   document.getElementById('sendBtn').onclick = () => {
     const msgInput = document.getElementById('messageInput');
-    const message = msgInput.value.trim();
+    let message = msgInput.value.trim();
     if(!message || !activeRoom) return;
 
     const ws = rooms[activeRoom].ws;
+
+    const msgPayload = { content: message };
+
+    // If message starts with "/", send as command
+    if(message.startsWith('/')) {
+      msgPayload.type = 'command';
+      msgPayload.content = message.slice(1).trim(); // remove leading "/"
+    } else {
+      msgPayload.type = 'default';
+    }
+
     if(ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ content: message }));
+      ws.send(JSON.stringify(msgPayload));
       msgInput.value = '';
+      // ⚠ Do not push locally, backend broadcast will handle it
     }
   };
 
