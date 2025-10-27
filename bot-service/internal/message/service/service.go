@@ -68,12 +68,23 @@ func getMessageFromCSV(csvData string) (string, error) {
 		return "", err
 	}
 
-	if len(records) < 2 || len(records[1]) < 7 {
+	if len(records) < 2 {
 		return "", errors.New("unexpected CSV format")
 	}
 
-	symbol := records[1][0]
-	closePrice := records[1][6]
+	var data []string
+	for _, rec := range records[1:] {
+		if len(rec) >= 8 {
+			data = rec
+			break
+		}
+	}
+	if data == nil {
+		return "", errors.New("unexpected CSV format")
+	}
+
+	symbol := data[0]
+	closePrice := data[6]
 
 	if closePrice == "N/D" || closePrice == "" {
 		return "", errors.New("quote not available")

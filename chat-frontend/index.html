@@ -216,10 +216,9 @@
 
     const msgPayload = { content: message };
 
-    // If message starts with "/", send as command
+    // If message starts with "/", send as command but keep the "/"
     if(message.startsWith('/')) {
       msgPayload.type = 'command';
-      msgPayload.content = message.slice(1).trim(); // remove leading "/"
     } else {
       msgPayload.type = 'default';
     }

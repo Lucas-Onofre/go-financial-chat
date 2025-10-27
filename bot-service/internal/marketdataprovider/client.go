@@ -22,7 +22,7 @@ func (c *Client) GetMarketData(stockCommand string) (string, error) {
 			"s": stockCommand,
 			"f": "sd2t2ohlcv",
 			"e": "csv",
-			// TODO: verify usage of 'h' param
+			"h": "",
 		}).
 		Get(stooqUrl)
 	if err != nil {

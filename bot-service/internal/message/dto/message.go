@@ -15,7 +15,7 @@ var (
 type CommandMessage struct {
 	UserID  string  `json:"user_id"`
 	RoomID  string  `json:"room_id"`
-	Command Command `json:"command"`
+	Command Command `json:"content"`
 }
 
 func (c *CommandMessage) Validate() error {

@@ -85,7 +85,8 @@ func (c *Client) ReadPump() {
 		message.RoomID = c.RoomID
 
 		if strings.ToLower(message.Type) == strings.ToLower(MessageTypeCommand.ToString()) {
-			if err := c.Hub.Broker.Publish(shared.BrokerChatCommandsQueueName, string(messageBytes)); err != nil {
+			updatedBytes, _ := json.Marshal(message)
+			if err := c.Hub.Broker.Publish(shared.BrokerChatCommandsQueueName, string(updatedBytes)); err != nil {
 				log.Printf("error publishing command message to broker: %v", err)
 				botMessage := NewBotMessage(c.RoomID, "Failed to process command. Please try again later.")
 				c.Hub.Broadcast <- botMessage
