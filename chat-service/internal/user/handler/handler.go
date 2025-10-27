@@ -32,7 +32,6 @@ func (a *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	var input userdto.RegisterDTO
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrInvalidRequestBody)
 		return

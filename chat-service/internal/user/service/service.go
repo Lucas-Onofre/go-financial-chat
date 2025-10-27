@@ -59,5 +59,5 @@ func (s *Service) Login(ctx context.Context, loginDTO dto.LoginDTO) (string, err
 		return "", customerrors.Wrap(customerrors.ErrUnauthorized, errors.New("invalid credentials"))
 	}
 
-	return s.jwtService.GenerateToken(saved.ID)
+	return s.jwtService.GenerateToken(saved.ID, saved.Username)
 }

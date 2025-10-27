@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/websocket"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -21,6 +23,7 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
+	// Postgres
 	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect database:", err)
@@ -32,13 +35,13 @@ func main() {
 		log.Fatal("failed to migrate database:", err)
 	}
 
+	// RabbitMQ
 	rabbitmqURL := fmt.Sprintf("amqp://%s:%s@%s:%s/",
 		os.Getenv("RABBITMQ_USER"),
 		os.Getenv("RABBITMQ_PASSWORD"),
 		os.Getenv("RABBITMQ_HOST"),
 		os.Getenv("RABBITMQ_PORT"))
 
-	// Retry logic for RabbitMQ connection
 	var rb *broker.RabbitMQBroker
 	var retryErr error
 	maxRetries := 10
@@ -55,6 +58,7 @@ func main() {
 	}
 	defer rb.Close()
 
+	// User auth
 	jwtService := jwt.NewJWTService(os.Getenv("SECRET_KEY"), 24*time.Hour)
 	userRepo := repository.NewRepository(db)
 	userService := service.New(userRepo, jwtService)
@@ -62,14 +66,22 @@ func main() {
 
 	mux.HandleFunc("/register", handleMethod(http.MethodPost, userHandler.Register))
 	mux.HandleFunc("/login", handleMethod(http.MethodPost, userHandler.Login))
+
+	// Websocket Hub
+	hub := websocket.NewHub()
+	go hub.Run()
+
+	// Websocket
+	mux.HandleFunc("/ws", websocket.WsHandler(hub, jwtService))
+
+	// Health check
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
 	log.Println("Starting server on port 8081")
-	if err := http.ListenAndServe(":8081", mux); err != nil {
+	if err := http.ListenAndServe(":8081", corsMiddleware(mux)); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -82,4 +94,19 @@ func handleMethod(method string, handlerFunc http.HandlerFunc) http.HandlerFunc 
 		}
 		handlerFunc(w, r)
 	}
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

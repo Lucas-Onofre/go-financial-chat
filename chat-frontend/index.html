@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Chat Multi-Room</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .container { background: #fff; padding: 20px; border-radius: 10px; width: 550px; max-width: 90%; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px; }
+    h2 { margin: 0 0 10px 0; }
+    input, button { padding: 8px; font-size: 14px; }
+    input { width: calc(100% - 16px); margin-bottom: 5px; }
+    button { width: 100%; margin-bottom: 5px; cursor: pointer; }
+    .chat-box { border: 1px solid #ccc; border-radius: 5px; height: 250px; overflow-y: auto; padding: 10px; background: #fafafa; margin-bottom: 5px; }
+    .message { margin-bottom: 5px; }
+    .system { color: #888; font-style: italic; }
+    .room-tabs { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 5px; }
+    .room-tab { padding: 5px 10px; border-radius: 5px; background: #ddd; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .room-tab.active { background: #4f46e5; color: white; }
+    .close-btn { background: red; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; font-size: 12px; line-height: 14px; text-align: center; padding: 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div id="auth-section">
+    <h2>Login / Register</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <button id="registerBtn">Register</button>
+  </div>
+
+  <div id="chat-section" style="display:none;">
+    <h2>Multi-Room Chat</h2>
+    <input type="text" id="new-room" placeholder="New room">
+    <button id="joinRoomBtn">Join Room</button>
+    <div class="room-tabs" id="room-tabs"></div>
+    <div class="chat-box" id="chat-container"></div>
+    <input type="text" id="messageInput" placeholder="Type your message">
+    <button id="sendBtn">Send</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8081';
+  const WS_BASE = 'ws://localhost:8081/ws';
+
+  let token = null;
+  let username = null;
+  const rooms = {}; // { roomID: { ws, messages } }
+  let activeRoom = null;
+
+  const authSection = document.getElementById('auth-section');
+  const chatSection = document.getElementById('chat-section');
+  const chatContainer = document.getElementById('chat-container');
+  const roomTabsDiv = document.getElementById('room-tabs');
+
+  function showChatSection() {
+    authSection.style.display = 'none';
+    chatSection.style.display = 'flex';
+    chatSection.style.flexDirection = 'column';
+    chatSection.style.gap = '5px';
+  }
+
+  // ---------- Authentication ----------
+  document.getElementById('loginBtn').onclick = async () => {
+    username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    if(!username || !password) return alert('Please enter username and password');
+    try {
+      const res = await fetch(API_BASE + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if(!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      token = data.token;
+      showChatSection();
+    } catch(err) {
+      alert('Login error: ' + err.message);
+    }
+  };
+
+  document.getElementById('registerBtn').onclick = async () => {
+    username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    if(!username || !password) return alert('Please enter username and password');
+    try {
+      const res = await fetch(API_BASE + '/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if(!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      token = data.token;
+      showChatSection();
+    } catch(err) {
+      alert('Registration error: ' + err.message);
+    }
+  };
+
+  // ---------- Room Tabs ----------
+  function createRoomTab(roomID) {
+    if(document.getElementById('tab-' + roomID)) return;
+    const tab = document.createElement('div');
+    tab.className = 'room-tab';
+    tab.id = 'tab-' + roomID;
+
+    const span = document.createElement('span');
+    span.textContent = roomID;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.textContent = '×';
+    closeBtn.onclick = (e) => { e.stopPropagation(); closeRoom(roomID); };
+
+    tab.appendChild(span);
+    tab.appendChild(closeBtn);
+    tab.onclick = () => setActiveRoom(roomID);
+    roomTabsDiv.appendChild(tab);
+  }
+
+  function setActiveRoom(roomID) {
+    activeRoom = roomID;
+    Array.from(roomTabsDiv.children).forEach(tab => {
+      tab.classList.toggle('active', tab.id === 'tab-' + roomID);
+    });
+    renderMessages();
+  }
+
+  function renderMessages() {
+    chatContainer.innerHTML = '';
+    if(!activeRoom) return;
+    rooms[activeRoom].messages.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.innerHTML = msg.username ? `<strong>${msg.username}:</strong> ${msg.content}` : `<span class='system'>${msg.content}</span>`;
+      chatContainer.appendChild(div);
+    });
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  // ---------- Join / Close Room ----------
+  function joinRoom(roomID) {
+    if (rooms[roomID]) return setActiveRoom(roomID); // already connected
+
+    const ws = new WebSocket(`${WS_BASE}?token=${encodeURIComponent(token)}&room=${encodeURIComponent(roomID)}`);
+    rooms[roomID] = { ws, messages: [] };
+
+    ws.onopen = () => {
+      rooms[roomID].messages.push({ content: `Connected to room '${roomID}'` });
+      if(activeRoom === roomID) renderMessages();
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        rooms[roomID].messages.push(msg);
+        if(activeRoom === roomID) renderMessages();
+      } catch {
+        rooms[roomID].messages.push({ content: evt.data });
+        if(activeRoom === roomID) renderMessages();
+      }
+    };
+
+    ws.onclose = () => {
+      rooms[roomID].messages.push({ content: `Disconnected from room '${roomID}'` });
+      if(activeRoom === roomID) renderMessages();
+    };
+
+    createRoomTab(roomID);
+    setActiveRoom(roomID);
+  }
+
+  function closeRoom(roomID) {
+    if(!rooms[roomID]) return;
+    rooms[roomID].ws.close();
+    delete rooms[roomID];
+    const tab = document.getElementById('tab-' + roomID);
+    if(tab) tab.remove();
+
+    if(activeRoom === roomID) {
+      const remaining = Object.keys(rooms);
+      setActiveRoom(remaining[0] || null);
+    }
+  }
+
+  // ---------- Send Message ----------
+  document.getElementById('joinRoomBtn').onclick = () => {
+    const roomID = document.getElementById('new-room').value.trim() || 'general';
+    joinRoom(roomID);
+  };
+
+  document.getElementById('sendBtn').onclick = () => {
+    const msgInput = document.getElementById('messageInput');
+    const message = msgInput.value.trim();
+    if(!message || !activeRoom) return;
+
+    const ws = rooms[activeRoom].ws;
+    if(ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ content: message }));
+      msgInput.value = '';
+    }
+  };
+
+  // ---------- Logout ----------
+  document.getElementById('logoutBtn').onclick = () => {
+    Object.values(rooms).forEach(r => r.ws.close());
+    token = null;
+    username = null;
+    Object.keys(rooms).forEach(k => delete rooms[k]);
+    activeRoom = null;
+    roomTabsDiv.innerHTML = '';
+    chatContainer.innerHTML = '';
+    authSection.style.display = 'block';
+    chatSection.style.display = 'none';
+  };
+</script>
+</body>
+</html>

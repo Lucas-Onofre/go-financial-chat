@@ -19,7 +19,7 @@ func NewJWTService(secretKey string, expiry time.Duration) *JWTService {
 	}
 }
 
-func (s *JWTService) GenerateToken(userID string) (string, error) {
+func (s *JWTService) GenerateToken(userID string, username string) (string, error) {
 	now := time.Now()
 
 	claims := model.CustomClaims{
@@ -28,7 +28,8 @@ func (s *JWTService) GenerateToken(userID string) (string, error) {
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
 		},
-		UserID: userID,
+		UserID:   userID,
+		Username: username,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

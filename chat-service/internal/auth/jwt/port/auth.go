@@ -5,6 +5,6 @@ import (
 )
 
 type TokenService interface {
-	GenerateToken(userID string) (string, error)
+	GenerateToken(userID string, username string) (string, error)
 	ValidateToken(token string) (*model.CustomClaims, error)
 }

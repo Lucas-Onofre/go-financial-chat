@@ -2,14 +2,14 @@ package repository
 
 import (
 	"context"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
-	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/repository/mocks"
-	"testing"
-
 	"gorm.io/gorm"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/dao"
+	"github.com/Lucas-Onofre/financial-chat/chat-service/internal/user/repository/mocks"
 )
 
 func Test_Create(t *testing.T) {
